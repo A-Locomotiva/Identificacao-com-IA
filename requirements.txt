@@ -1,0 +1,7 @@
+torch
+torchvision
+opencv-python-headless
+pyttsx3
+sounddevice
+SpeechRecognition
+pyaudio
