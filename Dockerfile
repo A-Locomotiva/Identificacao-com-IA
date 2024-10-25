@@ -18,7 +18,7 @@ RUN pip install --upgrade pip
 RUN pip install torch torchvision opencv-python-headless pyttsx3 sounddevice SpeechRecognition pyaudio
 
 # Clonar o repositório YOLOv5
-RUN git clone https://github.com/ultralytics/yolov5
+RUN git clone https://github.com/ultralytics/yolov8
 
 # Instalar dependências do YOLOv5
 RUN pip install -r yolov5/requirements.txt
