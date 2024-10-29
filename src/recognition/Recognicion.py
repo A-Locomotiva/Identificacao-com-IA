@@ -14,11 +14,10 @@ import pyttsx3
 import sounddevice as sd 
 import speech_recognition as sr 
 import numpy as np
+from ultralytics import YOLO
 
 
-# Carregar o modelo YOLOv5
-model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True)
-
+model = YOLO("yolo11n.pt") 
 # Configurar o motor de voz
 def falar(texto):
     engine = pyttsx3.init()

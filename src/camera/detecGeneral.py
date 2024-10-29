@@ -2,9 +2,10 @@ from ultralytics import YOLO
 import cv2
 import numpy as np
 
-windowName = "Camera"
 
-#Abrir câmera selecionada
+windowName = "Camera"
+# Abrir câmera selecionada
+
 cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
 
 if not cap.isOpened():
@@ -19,34 +20,32 @@ class_names = model.names
 
 seguir = False
 
-# Input para pesquisar por um objeto em específico
-object_to_search = input("Escreva o objeto a ser procurado: ")
-
 while True:
     success, frame = cap.read()
     
     if success:
-        results = model(frame)
+        if seguir:
+            results = model.track(frame, persist=True)
+        else:
+            results = model(frame)
         
         # Resultados
         for result in results:
-            boxes = result.boxes  # Resultado das caixas em volta dos objetos 
+            boxes = result.boxes  # Resultado das caixas em volta dos objetos
             for box in boxes:
                 # Coordenadas dos objetos
-                x1, y1, x2, y2 = box.xyxy[0].numpy()
+                x1, y1, x2, y2 = box.xyxy[0].numpy() 
                 confidence = box.conf[0].item()  # Porcentagem de Certeza
                 class_id = int(box.cls[0].item())  # ID do objeto
 
                 # Transformação do ID do objeto para o nome | Somente para fins visuais
                 object_name = class_names[class_id]
 
-                # Checagem de correspondência de acordo com o input | De acordo com o objeto que deseja ser procurado em específico
-                if object_name.lower() == object_to_search.lower():
-                    # Desenhar as caixas de detecção em volta dos objetos
-                    cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (255, 0, 0), 2)
-                    # Mostrar nome e porcentagem de Certeza da detecção de um objeto
-                    cv2.putText(frame, f'{object_name} {confidence:.2f}', (int(x1), int(y1) - 10),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+                # Desenhar as caixas de detecção em volta dos objetos
+                cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (255, 0, 0), 2)
+                # Mostrar nome e porcentagem de certeza da detecção de um objeto
+                cv2.putText(frame, f'{object_name} {confidence:.2f}', (int(x1), int(y1) - 10),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
 
                 # Função para determinar a posição do objeto na tela
                 def analisar_posicao(x1, y1, x2, y2, largura_tela, altura_tela):
@@ -74,9 +73,8 @@ while True:
                 # Calcula a posição do objeto
                 posicao = analisar_posicao(x1, y1, x2, y2, largura_tela, altura_tela)              
                                     
-                # Print the coordinates of the detected objecs
-                print(f"O objeto '{object_to_search}' está {posicao}.")
-
+                # Print do resultado dos objetos e sua posição
+                print(f"O objeto '{object_name}' está {posicao}.")
 
         # Imagem da câmera enquanto acontece o código de detecção
         cv2.imshow(windowName, frame)
