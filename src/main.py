@@ -1,8 +1,6 @@
-
-
 import cv2
 import tkinter as tk
-from threading import Thread
+from tkinter import messagebox
 import time
 from camera.detecEsp import *
 from camera.detecGeneral import * 
@@ -14,8 +12,15 @@ def initialize_yolov8():
     print("YOLOv8 model initialized.")
     
 def initialize_camera():
-    print("Camera initialized.")
-    
+    # Tenta abrir a câmera com o backend MSMF
+    cap = cv2.VideoCapture(0, cv2.CAP_MSMF)
+    if not cap.isOpened():
+        print("Erro: A câmera não foi inicializada corretamente.")
+        return None
+    print("Câmera inicializada com sucesso.")
+    return cap
+
+
 def initialize_mic():
     print("Microphone initialized.")
     
@@ -48,6 +53,7 @@ class App(tk.Tk):
         self.geometry("500x400")
         self.create_widgets()
         self.camera_on = False
+        self.cap = None
 
     def create_widgets(self):
         # Botão para iniciar o sistema
@@ -71,6 +77,12 @@ class App(tk.Tk):
         self.stop_button.pack(pady=10)
 
     def start_system(self):
+        # Inicializa a câmera e verifica se ela está funcionando
+        self.cap = initialize_camera()
+        if self.cap is None:
+            messagebox.showerror("Erro", "Não foi possível inicializar a câmera. Verifique se a câmera está conectada.")
+            return
+        
         # Ativa botões e define o status do sistema
         self.camera_on = True
         self.capture_button.config(state=tk.NORMAL)
@@ -80,21 +92,27 @@ class App(tk.Tk):
         self.output_text.insert(tk.END, "Sistema iniciado.\n")
 
     def capture_image(self):
-        if self.camera_on:
-            image_response = capture_image()
-            self.output_text.insert(tk.END, f"Imagem: {image_response}\n")
+        if self.camera_on and self.cap:
+            ret, frame = self.cap.read()
+            if ret:
+                image_response = capture_image()
+                self.output_text.insert(tk.END, f"Imagem: {image_response}\n")
+            else:
+                messagebox.showerror("Erro", "Não foi possível capturar a imagem.")
         else:
-            tk.messagebox.showwarning("Aviso", "Sistema não está ativo.")
+            messagebox.showwarning("Aviso", "Sistema não está ativo.")
 
     def process_audio(self):
         if self.camera_on:
             audio_response = record_mic()
             self.output_text.insert(tk.END, f"Áudio: {audio_response}\n")
         else:
-            tk.messagebox.showwarning("Aviso", "Sistema não está ativo.")
+            messagebox.showwarning("Aviso", "Sistema não está ativo.")
 
     def stop_system(self):
-        # Desativa o sistema
+        # Libera a câmera e desativa o sistema
+        if self.cap:
+            self.cap.release()
         self.camera_on = False
         self.capture_button.config(state=tk.DISABLED)
         self.audio_button.config(state=tk.DISABLED)
